@@ -5,15 +5,15 @@
     android:id="@+id/frameLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SearchFragment">
+    tools:context=".Fragments.SearchFragment">
 
     <EditText
         android:id="@+id/MovieTitleText"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:ems="10"
         android:hint="@string/movieHint"
-        android:inputType="textPersonName"
+        android:inputType="text"
         android:minHeight="48dp"
         app:layout_constraintEnd_toStartOf="@+id/SearchBtn"
         app:layout_constraintHorizontal_bias="0.5"
@@ -24,6 +24,7 @@
         android:id="@+id/SearchBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="3dp"
         android:backgroundTint="#B3B2B2"
         android:text="@string/search"
         android:textColor="#000000"
@@ -38,6 +39,7 @@
         android:id="@+id/RecentBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="3dp"
         android:backgroundTint="#B3B2B2"
         android:text="@string/recent"
         android:textColor="#000000"
@@ -56,5 +58,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/SearchBtn" />
+        app:layout_constraintTop_toBottomOf="@+id/SearchBtn"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

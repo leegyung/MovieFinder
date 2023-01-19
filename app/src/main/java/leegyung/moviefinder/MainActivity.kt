@@ -5,7 +5,9 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.fragment.app.FragmentManager
+import android.widget.TextView
+import leegyung.moviefinder.Fragments.RecentSearchFragment
+import leegyung.moviefinder.Fragments.SearchFragment
 
 class MainActivity : AppCompatActivity() {
 

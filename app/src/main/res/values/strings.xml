@@ -3,5 +3,8 @@
     <string name="search">검색</string>
     <string name="recent">최근검색</string>
     <string name="movieHint">제목:</string>
+    <string name="rate">평점: </string>
+    <string name="publish">출시: </string>
+    <string name="title">제목: </string>
     <string name="recentSearch">최근 검색 이력</string>
 </resources>
