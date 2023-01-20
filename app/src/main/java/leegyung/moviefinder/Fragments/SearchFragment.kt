@@ -24,44 +24,44 @@ import leegyung.moviefinder.databinding.FragmentSearchBinding
 
 
 class SearchFragment : Fragment() {
+    //Naver api 호출시 사용할 유저 id,passcode (사용하진 않으실 거죠?.....ㅠ)
     private val mClientId = "3t6zOLNt2kwc2gwiuHsS"
     private val mClientPwd = "S746jPMCtc"
 
+    //onDestroyView 에서 binding release
     private var _binding : FragmentSearchBinding? = null
     private val mBinding get() = _binding!!
 
-
+    //영화 정보 저장과 요청을 위한 viewModel
     private lateinit var mViewModel: SearchViewModel
     private lateinit var mAdapter : MovieRecyclerViewAdapter
     // 인테넷 연결 확인을 위한 ConnectivityManager
     private lateinit var mInternetManager : ConnectivityManager
 
-    // 리사이클러 마지막원소 도달시 다중 호출 방지용
+    // 리사이클러뷰 마지막원소 도달시 다중 호출 방지용
     private var mPageNum = 0
-
+    // 검색한 검색어 목록
     private val mSearchedList = arrayListOf<String>()
-
-
 
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
         _binding = FragmentSearchBinding.inflate(inflater, container, false)
         return mBinding.root
     }
 
-    //초기값을 설정해주거나 LiveData 옵저빙, RecyclerView 또는 ViewPager2 에 사용될 Adapter 세팅
+    
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        //사용할 viewmodel 설정
         mViewModel = ViewModelProvider(this)[SearchViewModel::class.java]
+        // mViewModel 정보 초기화
         mViewModel.initializer(mClientId, mClientPwd)
         // ConnectivityManager 를 CONNECTIVITY_SERVICE 로 초기화
         mInternetManager = context?.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
+        // mBinding.MovieList adapter 설정
         mAdapter = MovieRecyclerViewAdapter(context)
         mBinding.MovieList.adapter = mAdapter
 
@@ -71,38 +71,55 @@ class SearchFragment : Fragment() {
 
     }
 
+    /**
+     * 검색, 최근검색 버튼 리스너 추가
+     * 키보트 엔터키 리스너 추가
+     */
     private fun buttonsInit(){
-
         mBinding.RecentBtn.setOnClickListener {
+            // 최근검색 버튼 클릭시 fragment 전환
             (activity as MainActivity).switchFragment(2, mSearchedList)
+            // 검색목록 초기화
             mSearchedList.clear()
         }
-
+        
         mBinding.SearchBtn.setOnClickListener {
+            //검색버튼 클릭시 데이터 요청 실행
             searchMovie()
         }
 
         mBinding.MovieTitleText.setOnKeyListener { _, keyCode, keyEvent ->
             if(keyEvent.action == KeyEvent.ACTION_DOWN && keyCode == KEYCODE_ENTER){
+                //키보드의 엔터키 누를시 데이터 요청 실행
                 searchMovie()
             }
             false
         }
     }
 
+    /**
+     * 영화 검색 요청 mViewModel에 전달
+     */
     private fun searchMovie(){
         val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        //인터넷 연결시 실행
         if(checkInternetConnection()){
+            //같은 검색어가 아닐시 실행
             if(mBinding.MovieTitleText.text.toString() != mViewModel.mCurrentTitle){
+                //검색어가 비어있다면 Toast 표시
                 if(mBinding.MovieTitleText.text.toString().isEmpty()){
                     Toast.makeText(context, "검색어를 입력 하세요.", Toast.LENGTH_SHORT).show()
                 }else{
+                    //mViewModel에 현제 검색어 첫 페이지 요청
                     mViewModel.loadMovieList(mBinding.MovieTitleText.text.toString(), 1)
+                    //키보드 내리기
                     imm.hideSoftInputFromWindow(view?.windowToken, 0)
                     mPageNum = 0
+                    //최근 검색어 목록 추가
                     addSearchWord()
                 }
             }else{
+                //검색어 같을 시 키보드 내리기
                 imm.hideSoftInputFromWindow(view?.windowToken, 0)
             }
         }else{
@@ -111,7 +128,13 @@ class SearchFragment : Fragment() {
 
     }
 
+    /**
+     * 검색한 검색어 mSearchedList에 추가
+     */
     private fun addSearchWord(){
+        //동일 검색어 제거
+        mSearchedList.remove(mBinding.MovieTitleText.text.toString())
+        //사이즈 10개 이하로 조절
         if(mSearchedList.size == 10){
             mSearchedList.removeAt(0)
             mSearchedList.add(mBinding.MovieTitleText.text.toString())
@@ -120,16 +143,22 @@ class SearchFragment : Fragment() {
         }
     }
 
-
+    /**
+     * mViewModel 의 mCurrentPageMovies 와 mLoadError 변화 확인을 위한 observer 설정
+     */
     private fun observeViewModelInit(){
+        //요청한 영화 데이터가 mCurrentPageMovies 추가됐을 시 실행
         mViewModel.mCurrentPageMovies.observe(viewLifecycleOwner){
             mViewModel.cleanTitles()
+            //mAdapter에 변경사항 notice
             mAdapter.mMovieList = mViewModel.getMovieList()
             mAdapter.notifyDataSetChanged()
         }
 
+        //영화 로드중 애러 발생 시 실행
         mViewModel.mLoadError.observe(viewLifecycleOwner){
             if(mViewModel.mLoadError.value != null && mViewModel.mLoadError.value != ""){
+                //애러 메세지 toast
                 Toast.makeText(context, mViewModel.mLoadError.value, Toast.LENGTH_LONG).show()
             }
         }
@@ -142,7 +171,6 @@ class SearchFragment : Fragment() {
         mBinding.MovieList.addOnScrollListener(object : RecyclerView.OnScrollListener(){
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
-
                 val lastItemPosition = (mBinding.MovieList.layoutManager as LinearLayoutManager).findLastVisibleItemPosition()
                 val totalItemCount = mAdapter.itemCount - 1
                 // 마지막 item 이 보였으면 실행
@@ -182,6 +210,10 @@ class SearchFragment : Fragment() {
         }
     }
 
+    /**
+     * RecentSearchFragment 에서 최근 검색어중 하나 선택시 검색어 정보 로드
+     * param title: 선택한 검색어
+     */
     fun searchWordSelected(title : String){
         if(checkInternetConnection()){
             mViewModel.loadMovieList(title, 1)
@@ -193,11 +225,12 @@ class SearchFragment : Fragment() {
         }
     }
 
+    //검색어 목록 return
     fun getSearchWordList() : ArrayList<String> {
         return mSearchedList
     }
 
-
+    //binding release
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

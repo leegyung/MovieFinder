@@ -8,9 +8,9 @@ import leegyung.moviefinder.Data.Movie
 import leegyung.moviefinder.RetrofitProvider
 
 class MovieSearchRepository(
+    //Naver api에 사용되는 사용자 id와 passcode
     private val mClientId : String,
     private val mClientPass : String) {
-
 
     // 코루틴 exception 발생 시 알려줄 handler
     private val mExceptionHandler = CoroutineExceptionHandler { _, throwable ->
@@ -23,19 +23,20 @@ class MovieSearchRepository(
     private val mMovieApi = RetrofitProvider.getMovieListRetrofit().create(MovieApi::class.java)
 
 
-
-    // Response 의 Load Error 메시지
+    // Response 의 live data 형식 Load Error 메시지
     val mLoadError = MutableLiveData("")
-    // 로딩 한 영화 목록
+    // 로딩 한 live data 형식 영화 목록
     val mMovieList = MutableLiveData<ArrayList<Movie>>()
     // 검색 한 영화의 총 갯수
     val mTotalItemNum = MutableLiveData(0)
 
 
-
-
+    /**
+     * 요청한 검색어와 페이지 번호의 영화 목록 데이터를 Retrofit으로 요청
+     * param title: 검색어
+     * param page: 페이지 번호
+     */
     fun updateMovieData(title : String, page : Int) {
-
         // 로딩중 설정
         mLoading = true
 
@@ -58,6 +59,7 @@ class MovieSearchRepository(
         }
     }
 
+    // 전에 요청해 받아온 정보 초기화
     fun clearInfo(){
         mLoadError.value = ""
         mMovieList.value = ArrayList()

@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import leegyung.moviefinder.MainActivity
 import leegyung.moviefinder.R
 
-open class WordsRecyclerViewAdapter(private val mContext : Context?, private val mMainActivity: MainActivity)
+open class WordsRecyclerViewAdapter(private val mContext : Context?, mMainActivity: MainActivity)
     : RecyclerView.Adapter<WordsRecyclerViewAdapter.ViewHolder>() {
 
     var mWordList = ArrayList<String>()

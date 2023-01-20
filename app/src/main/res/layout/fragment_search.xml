@@ -19,7 +19,8 @@
         app:layout_constraintEnd_toStartOf="@+id/SearchBtn"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:importantForAutofill="no" />
 
     <Button
         android:id="@+id/SearchBtn"

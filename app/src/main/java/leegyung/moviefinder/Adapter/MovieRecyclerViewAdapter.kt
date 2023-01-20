@@ -46,9 +46,9 @@ open class MovieRecyclerViewAdapter(
         // 영화 포스터를 표시하는 imageView
         private val mPoster = itemView.findViewById<ImageView>(R.id.PosterImageView)
         // 영화 정보를 표시하는 textView
-        private val mTitle = itemView.findViewById<TextView>(R.id.Title)
-        private val mPubDate = itemView.findViewById<TextView>(R.id.PubDate)
-        private val mRate = itemView.findViewById<TextView>(R.id.Rate)
+        private val mTitle = itemView.findViewById<TextView>(R.id.Title) //제목
+        private val mPubDate = itemView.findViewById<TextView>(R.id.PubDate) //출시일
+        private val mRate = itemView.findViewById<TextView>(R.id.Rate) //평점
 
         /**
          * 뷰홀더 content 설정
@@ -57,7 +57,6 @@ open class MovieRecyclerViewAdapter(
         fun bind(item: Movie){
             // 포스터 URL 을 mPoster 에 연결시켜주기 위해 Glide 사용
             // 이미지 URL 정보 없을 시 R.drawable.movie 로 설정
-
             Glide.with(mContext!!).load(item.image).error(R.drawable.movie).into(mPoster)
 
             // 영화 제목, 평점, 출시일 정보 설정

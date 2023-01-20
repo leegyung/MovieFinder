@@ -6,6 +6,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Query
 
+// 영화 정보 검색 api
 interface MovieApi {
     @GET("movie.json")
     suspend fun getMovies(

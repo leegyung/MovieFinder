@@ -1,5 +1,6 @@
 package leegyung.moviefinder.Data
 
+// 영화 검색 api response data model
 data class MovieListResponse (
     val items : ArrayList<Movie>,
     val total : Int,
