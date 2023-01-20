@@ -155,7 +155,8 @@ class SearchFragment : Fragment() {
             //mAdapter에 변경사항 notice
             mAdapter.mMovieList = mViewModel.getMovieList()
             mAdapter.notifyDataSetChanged()
-            if(mViewModel.getMovieList().isEmpty()){
+
+            if(mAdapter.mMovieList.isEmpty()){
                 mBinding.NoResultText.visibility = View.VISIBLE
             }
             else{
