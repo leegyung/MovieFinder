@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
@@ -92,6 +93,7 @@ class SearchFragment : Fragment() {
             if(keyEvent.action == KeyEvent.ACTION_DOWN && keyCode == KEYCODE_ENTER){
                 //키보드의 엔터키 누를시 데이터 요청 실행
                 searchMovie()
+                Log.v("enter", "pressed")
             }
             false
         }
@@ -153,6 +155,12 @@ class SearchFragment : Fragment() {
             //mAdapter에 변경사항 notice
             mAdapter.mMovieList = mViewModel.getMovieList()
             mAdapter.notifyDataSetChanged()
+            if(mViewModel.getMovieList().isEmpty()){
+                mBinding.NoResultText.visibility = View.VISIBLE
+            }
+            else{
+                mBinding.NoResultText.visibility = View.INVISIBLE
+            }
         }
 
         //영화 로드중 애러 발생 시 실행
