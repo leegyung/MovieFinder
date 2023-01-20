@@ -12,6 +12,7 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import leegyung.moviefinder.Fragments.RecentSearchFragment
 import leegyung.moviefinder.Fragments.SearchFragment
 import leegyung.moviefinder.ListenerInterface.OnSearchWordClick
@@ -23,7 +24,6 @@ class MainActivity : AppCompatActivity(), OnSearchWordClick {
     private val mSearchingFrag = SearchFragment()
     private val mRecentSearchFrag = RecentSearchFragment(this)
     private lateinit var mSearchWordsDB : SearchWordsDB
-    private lateinit var mWordsFromRoom : SearchWordsEntity
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,11 +32,10 @@ class MainActivity : AppCompatActivity(), OnSearchWordClick {
         //ActionBar 제거
         supportActionBar?.hide()
 
-        mSearchWordsDB = SearchWordsDB.getInstance(this)!!
-
         requestPermissions()
         initFragments()
 
+        mSearchWordsDB = SearchWordsDB.getInstance(this)!!
 
     }
 
@@ -120,22 +119,39 @@ class MainActivity : AppCompatActivity(), OnSearchWordClick {
             }
         }
 
-        mWordsFromRoom = SearchWordsEntity(Gson().toJson(recentWords))
+
         CoroutineScope(Dispatchers.IO).launch {
-            mSearchWordsDB.searchWordDao().newWords(mWordsFromRoom)
+            if(mSearchWordsDB.searchWordDao().isDBEmpty()){
+                val newEntity = SearchWordsEntity(Gson().toJson(recentWords))
+                mSearchWordsDB.searchWordDao().newWords(newEntity)
+            }else{
+                val entity = mSearchWordsDB.searchWordDao().getWords()
+                entity.wordList = Gson().toJson(recentWords)
+                mSearchWordsDB.searchWordDao().updateWords(entity)
+            }
+
         }
     }
 
-    /*
+
     override fun onRestart() {
         super.onRestart()
+
+    }
+
+    override fun onStart() {
+        super.onStart()
         CoroutineScope(Dispatchers.IO).launch {
-            mWordsFromRoom = mSearchWordsDB.searchWordDao().getWords()
+            if(!mSearchWordsDB.searchWordDao().isDBEmpty()){
+                val words = mSearchWordsDB.searchWordDao().getWords().wordList
+                withContext(Dispatchers.Main){
+                    val type = object : TypeToken<ArrayList<String>>(){}.type
+                    mRecentSearchFrag.restoreSearchWordList(Gson().fromJson(words, type))
+                }
+            }
         }
 
-        val type = object : TypeToken<ArrayList<String>>(){}.type
-        mRecentSearchFrag.restoreSearchWordList(Gson().fromJson(mWordsFromRoom.wordList, type))
-    }*/
+    }
 
 
 
