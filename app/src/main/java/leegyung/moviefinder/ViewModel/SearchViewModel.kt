@@ -29,9 +29,6 @@ class SearchViewModel : ViewModel(){
         mLoadError = mMovieRepository.mLoadError
         mCurrentPageMovies = mMovieRepository.mMovieList
         mTotalItemNum = mMovieRepository.mTotalItemNum
-
-
-
     }
 
     fun loadMovieList(title : String, pageNum : Int){
@@ -40,8 +37,6 @@ class SearchViewModel : ViewModel(){
                 viewModelScope.launch {
                     if(pageNum < mTotalItemNum.value!!){
                         mMovieRepository.updateMovieData(title, pageNum)
-
-
                     }
                 }
             }

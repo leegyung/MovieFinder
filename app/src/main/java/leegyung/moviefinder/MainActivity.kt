@@ -5,8 +5,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import androidx.room.Room
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
@@ -112,6 +110,7 @@ class MainActivity : AppCompatActivity(), OnSearchWordClick {
 
         if(wordsFromSearchFrag.isNotEmpty()){
             for(word:String in wordsFromSearchFrag){
+                recentWords.remove(word)
                 recentWords.add(0, word)
             }
             if(recentWords.size > 10){
@@ -133,11 +132,6 @@ class MainActivity : AppCompatActivity(), OnSearchWordClick {
         }
     }
 
-
-    override fun onRestart() {
-        super.onRestart()
-
-    }
 
     override fun onStart() {
         super.onStart()

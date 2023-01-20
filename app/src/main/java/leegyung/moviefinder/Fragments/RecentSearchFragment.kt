@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
 import leegyung.moviefinder.Adapter.WordsRecyclerViewAdapter
 import leegyung.moviefinder.MainActivity
 import leegyung.moviefinder.databinding.FragmentRecentSearchBinding
@@ -19,10 +20,12 @@ class RecentSearchFragment(private val mMainActivityContext : MainActivity) : Fr
     private val mBinding get() = _binding!!
     private lateinit var mAdapter : WordsRecyclerViewAdapter
 
+    private lateinit var mBackPressedCallback: OnBackPressedCallback
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentRecentSearchBinding.inflate(inflater, container, false)
         return mBinding.root
     }
@@ -34,12 +37,22 @@ class RecentSearchFragment(private val mMainActivityContext : MainActivity) : Fr
         mAdapter = WordsRecyclerViewAdapter(context, mMainActivityContext)
         mBinding.WordListRecyclerView.adapter = mAdapter
 
+        initializeButtons()
+    }
 
+    private fun initializeButtons(){
         mBinding.BackToSearch.setOnClickListener {
             (activity as MainActivity).switchFragment(1,null)
         }
 
+        mBackPressedCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                (activity as MainActivity).switchFragment(1, null)
+            }
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, mBackPressedCallback)
     }
+
 
     fun updateWordList(words : ArrayList<String>?){
         if(words != null && words.isNotEmpty()){
@@ -61,6 +74,11 @@ class RecentSearchFragment(private val mMainActivityContext : MainActivity) : Fr
     fun restoreSearchWordList(words : ArrayList<String>){
         mAdapter.mWordList = words
         mAdapter.notifyDataSetChanged()
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        mBackPressedCallback.remove()
     }
 
     override fun onDestroyView() {

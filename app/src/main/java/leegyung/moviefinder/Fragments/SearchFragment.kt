@@ -6,6 +6,8 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.KeyEvent
+import android.view.KeyEvent.KEYCODE_ENTER
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -45,11 +47,10 @@ class SearchFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
 
         _binding = FragmentSearchBinding.inflate(inflater, container, false)
-
-        return mBinding!!.root
+        return mBinding.root
     }
 
     //초기값을 설정해주거나 LiveData 옵저빙, RecyclerView 또는 ViewPager2 에 사용될 Adapter 세팅
@@ -71,37 +72,54 @@ class SearchFragment : Fragment() {
     }
 
     private fun buttonsInit(){
-        val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+
         mBinding.RecentBtn.setOnClickListener {
             (activity as MainActivity).switchFragment(2, mSearchedList)
             mSearchedList.clear()
         }
 
         mBinding.SearchBtn.setOnClickListener {
-            if(checkInternetConnection()){
-                if(mBinding.MovieTitleText.text.toString() != mViewModel.mCurrentTitle){
-                    if(mBinding.MovieTitleText.text.toString().isEmpty()){
-                        Toast.makeText(context, "검색어를 입력 하세요.", Toast.LENGTH_SHORT).show()
-                    }else{
-                        mViewModel.loadMovieList(mBinding.MovieTitleText.text.toString(), 1)
-                        imm.hideSoftInputFromWindow(view?.windowToken, 0)
-                        mPageNum = 0
+            searchMovie()
+        }
 
-                        if(mSearchedList.size == 10){
-                            mSearchedList.removeAt(0)
-                            mSearchedList.add(mBinding.MovieTitleText.text.toString())
-                        }else{
-                            mSearchedList.add(mBinding.MovieTitleText.text.toString())
-                        }
-                    }
-                }
-
-            }else{
-                Toast.makeText(context, "인터넷 연결 없음", Toast.LENGTH_SHORT).show()
+        mBinding.MovieTitleText.setOnKeyListener { _, keyCode, keyEvent ->
+            if(keyEvent.action == KeyEvent.ACTION_DOWN && keyCode == KEYCODE_ENTER){
+                searchMovie()
             }
-
+            false
         }
     }
+
+    private fun searchMovie(){
+        val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        if(checkInternetConnection()){
+            if(mBinding.MovieTitleText.text.toString() != mViewModel.mCurrentTitle){
+                if(mBinding.MovieTitleText.text.toString().isEmpty()){
+                    Toast.makeText(context, "검색어를 입력 하세요.", Toast.LENGTH_SHORT).show()
+                }else{
+                    mViewModel.loadMovieList(mBinding.MovieTitleText.text.toString(), 1)
+                    imm.hideSoftInputFromWindow(view?.windowToken, 0)
+                    mPageNum = 0
+                    addSearchWord()
+                }
+            }else{
+                imm.hideSoftInputFromWindow(view?.windowToken, 0)
+            }
+        }else{
+            Toast.makeText(context, "인터넷 연결 없음", Toast.LENGTH_SHORT).show()
+        }
+
+    }
+
+    private fun addSearchWord(){
+        if(mSearchedList.size == 10){
+            mSearchedList.removeAt(0)
+            mSearchedList.add(mBinding.MovieTitleText.text.toString())
+        }else{
+            mSearchedList.add(mBinding.MovieTitleText.text.toString())
+        }
+    }
+
 
     private fun observeViewModelInit(){
         mViewModel.mCurrentPageMovies.observe(viewLifecycleOwner){
@@ -169,6 +187,7 @@ class SearchFragment : Fragment() {
             mViewModel.loadMovieList(title, 1)
             mPageNum = 0
             mBinding.MovieTitleText.setText(title)
+            addSearchWord()
         }else{
             Toast.makeText(context, "인터넷 연결 없음", Toast.LENGTH_SHORT).show()
         }
