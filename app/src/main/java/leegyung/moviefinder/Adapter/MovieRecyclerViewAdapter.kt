@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.WebView
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -13,7 +14,7 @@ import leegyung.moviefinder.R
 
 
 open class MovieRecyclerViewAdapter(
-    private val context : Context?)
+    private val mContext : Context?)
     : RecyclerView.Adapter<MovieRecyclerViewAdapter.ViewHolder>() {
 
     var mMovieList = ArrayList<Movie>()
@@ -25,7 +26,7 @@ open class MovieRecyclerViewAdapter(
      * return ViewHolder : recyclerview_layout 의 viewHolder
      */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(context).inflate(R.layout.movie_info_layout, parent, false)
+        val view = LayoutInflater.from(mContext).inflate(R.layout.movie_info_layout, parent, false)
         return ViewHolder(view)
     }
 
@@ -56,14 +57,24 @@ open class MovieRecyclerViewAdapter(
         fun bind(item: Movie){
             // 포스터 URL 을 mPoster 에 연결시켜주기 위해 Glide 사용
             // 이미지 URL 정보 없을 시 R.drawable.movie 로 설정
-            Glide.with(context!!).load(item.image).error(R.drawable.movie).into(mPoster)
-            // 영화 제목, 평점, 출시일 정보 설정
-            mTitle.text = mTitle.text.toString().plus(item.title)
-            mRate.text = mRate.text.toString().plus(item.userRating)
-            mPubDate.text = mPubDate.text.toString().plus(item.pubDate)
 
+            Glide.with(mContext!!).load(item.image).error(R.drawable.movie).into(mPoster)
+
+            // 영화 제목, 평점, 출시일 정보 설정
+            mTitle.text = mTitle.text.substring(0,3).plus(item.title)
+            mRate.text = mRate.text.substring(0,3).plus(item.userRating)
+            mPubDate.text = mPubDate.text.substring(0,3).plus(item.pubDate)
+
+            //브라우저에서 영화 클릭시 정보 표시
+            itemView.setOnClickListener {
+                val webView = WebView(mContext)
+                webView.loadUrl(item.link)
+            }
 
         }
     }
+
+
+
 
 }

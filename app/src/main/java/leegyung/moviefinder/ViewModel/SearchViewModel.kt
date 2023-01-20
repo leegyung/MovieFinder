@@ -4,13 +4,15 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import leegyung.moviefinder.Data.Movie
 import leegyung.moviefinder.Repository.MovieSearchRepository
 
 class SearchViewModel : ViewModel(){
 
-    private var mCurrentTitle = ""
+    var mCurrentTitle = ""
     // Response 의 Load Error 메시지
     lateinit var mLoadError : MutableLiveData<String>
     // 로딩 한 영화 목록
@@ -28,15 +30,18 @@ class SearchViewModel : ViewModel(){
         mCurrentPageMovies = mMovieRepository.mMovieList
         mTotalItemNum = mMovieRepository.mTotalItemNum
 
+
+
     }
 
-    fun loadMovieList(title : String){
-
+    fun loadMovieList(title : String, pageNum : Int){
         when(title){
             mCurrentTitle -> {
                 viewModelScope.launch {
-                    if(mAllMovies.size < mTotalItemNum.value!!){
-                        mMovieRepository.updateMovieData(title, mMovieRepository.mMovieList.value!!.size + 1)
+                    if(pageNum < mTotalItemNum.value!!){
+                        mMovieRepository.updateMovieData(title, pageNum)
+
+
                     }
                 }
             }
@@ -46,6 +51,7 @@ class SearchViewModel : ViewModel(){
                 mMovieRepository.clearInfo()
                 viewModelScope.launch {
                     mMovieRepository.updateMovieData(title, 1)
+
                 }
 
             }

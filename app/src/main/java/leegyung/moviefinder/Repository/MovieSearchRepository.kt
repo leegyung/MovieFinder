@@ -14,7 +14,7 @@ class MovieSearchRepository(
 
     // 코루틴 exception 발생 시 알려줄 handler
     private val mExceptionHandler = CoroutineExceptionHandler { _, throwable ->
-        Log.v("Coroutine Exception", throwable.toString()) }
+        onError("Exception: ${throwable.localizedMessage}") }
     // 현재 로딩 중인지 확인할 boolean
     private var mLoading = false
     // 영화 목록 로딩 취소를 위한 변수

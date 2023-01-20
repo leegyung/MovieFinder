@@ -13,6 +13,8 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import leegyung.moviefinder.Adapter.MovieRecyclerViewAdapter
 import leegyung.moviefinder.MainActivity
 import leegyung.moviefinder.ViewModel.SearchViewModel
@@ -23,12 +25,19 @@ class SearchFragment : Fragment() {
     private val mClientId = "3t6zOLNt2kwc2gwiuHsS"
     private val mClientPwd = "S746jPMCtc"
 
-    private lateinit var mBinding : FragmentSearchBinding
+    private var _binding : FragmentSearchBinding? = null
+    private val mBinding get() = _binding!!
+
+
     private lateinit var mViewModel: SearchViewModel
     private lateinit var mAdapter : MovieRecyclerViewAdapter
     // 인테넷 연결 확인을 위한 ConnectivityManager
     private lateinit var mInternetManager : ConnectivityManager
 
+    // 리사이클러 마지막원소 도달시 다중 호출 방지용
+    private var mPageNum = 0
+
+    private val mSearchedList = arrayListOf<String>()
 
 
 
@@ -38,9 +47,9 @@ class SearchFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
 
-        mBinding = FragmentSearchBinding.inflate(inflater, container, false)
+        _binding = FragmentSearchBinding.inflate(inflater, container, false)
 
-        return mBinding.root
+        return mBinding!!.root
     }
 
     //초기값을 설정해주거나 LiveData 옵저빙, RecyclerView 또는 ViewPager2 에 사용될 Adapter 세팅
@@ -57,19 +66,36 @@ class SearchFragment : Fragment() {
 
         buttonsInit()
         observeViewModelInit()
+        setMovieRecyclerViewListener()
 
     }
 
     private fun buttonsInit(){
         val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         mBinding.RecentBtn.setOnClickListener {
-            (activity as MainActivity).switchFragment(11,"")
+            (activity as MainActivity).switchFragment(2, mSearchedList)
+            mSearchedList.clear()
         }
 
         mBinding.SearchBtn.setOnClickListener {
             if(checkInternetConnection()){
-                mViewModel.loadMovieList(mBinding.MovieTitleText.text.toString())
-                imm.hideSoftInputFromWindow(view?.windowToken, 0)
+                if(mBinding.MovieTitleText.text.toString() != mViewModel.mCurrentTitle){
+                    if(mBinding.MovieTitleText.text.toString().isEmpty()){
+                        Toast.makeText(context, "검색어를 입력 하세요.", Toast.LENGTH_SHORT).show()
+                    }else{
+                        mViewModel.loadMovieList(mBinding.MovieTitleText.text.toString(), 1)
+                        imm.hideSoftInputFromWindow(view?.windowToken, 0)
+                        mPageNum = 0
+
+                        if(mSearchedList.size == 10){
+                            mSearchedList.removeAt(0)
+                            mSearchedList.add(mBinding.MovieTitleText.text.toString())
+                        }else{
+                            mSearchedList.add(mBinding.MovieTitleText.text.toString())
+                        }
+                    }
+                }
+
             }else{
                 Toast.makeText(context, "인터넷 연결 없음", Toast.LENGTH_SHORT).show()
             }
@@ -80,20 +106,37 @@ class SearchFragment : Fragment() {
     private fun observeViewModelInit(){
         mViewModel.mCurrentPageMovies.observe(viewLifecycleOwner){
             mViewModel.cleanTitles()
-            val temp = mViewModel.getMovieList()
-            Log.v("size", temp.toString())
-            mAdapter.mMovieList = temp
+            mAdapter.mMovieList = mViewModel.getMovieList()
             mAdapter.notifyDataSetChanged()
-
         }
 
         mViewModel.mLoadError.observe(viewLifecycleOwner){
-            if(mViewModel.mLoadError.value != ""){
+            if(mViewModel.mLoadError.value != null && mViewModel.mLoadError.value != ""){
                 Toast.makeText(context, mViewModel.mLoadError.value, Toast.LENGTH_LONG).show()
             }
-
         }
     }
+
+    /**
+     * RecyclerView 에 ScrollListener 를 추가하여 마지막 item 이 보였는지 판별
+     */
+    private fun setMovieRecyclerViewListener(){
+        mBinding.MovieList.addOnScrollListener(object : RecyclerView.OnScrollListener(){
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                val lastItemPosition = (mBinding.MovieList.layoutManager as LinearLayoutManager).findLastVisibleItemPosition()
+                val totalItemCount = mAdapter.itemCount - 1
+                // 마지막 item 이 보였으면 실행
+                if(lastItemPosition == totalItemCount && mPageNum != totalItemCount){
+                    mPageNum = totalItemCount
+                    // ViewModel 에 다음 페이지 로드 요청
+                    mViewModel.loadMovieList(mViewModel.mCurrentTitle, mPageNum + 2)
+                }
+            }
+        })
+    }
+
 
     /**
      * 인터넷 연결을 확인
@@ -121,5 +164,24 @@ class SearchFragment : Fragment() {
         }
     }
 
+    fun searchWordSelected(title : String){
+        if(checkInternetConnection()){
+            mViewModel.loadMovieList(title, 1)
+            mPageNum = 0
+            mBinding.MovieTitleText.setText(title)
+        }else{
+            Toast.makeText(context, "인터넷 연결 없음", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun getSearchWordList() : ArrayList<String> {
+        return mSearchedList
+    }
+
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 
 }

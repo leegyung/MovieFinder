@@ -5,14 +5,25 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.TextView
+import android.util.Log
+import androidx.room.Room
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import leegyung.moviefinder.Fragments.RecentSearchFragment
 import leegyung.moviefinder.Fragments.SearchFragment
+import leegyung.moviefinder.ListenerInterface.OnSearchWordClick
+import leegyung.moviefinder.RoomComponents.SearchWordsDB
+import leegyung.moviefinder.RoomComponents.SearchWordsEntity
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), OnSearchWordClick {
 
     private val mSearchingFrag = SearchFragment()
-    private val mRecentSearchFrag = RecentSearchFragment()
+    private val mRecentSearchFrag = RecentSearchFragment(this)
+    private lateinit var mSearchWordsDB : SearchWordsDB
+    private lateinit var mWordsFromRoom : SearchWordsEntity
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,6 +31,8 @@ class MainActivity : AppCompatActivity() {
 
         //ActionBar 제거
         supportActionBar?.hide()
+
+        mSearchWordsDB = SearchWordsDB.getInstance(this)!!
 
         requestPermissions()
         initFragments()
@@ -65,7 +78,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun switchFragment(fragNum : Int, title : String?){
+    fun switchFragment(fragNum : Int, searchList : ArrayList<String>?){
         when(fragNum){
             //mSearchingFrag 를 표시
             1 -> {
@@ -77,9 +90,53 @@ class MainActivity : AppCompatActivity() {
                 supportFragmentManager.beginTransaction().show(mRecentSearchFrag).commit()
                 supportFragmentManager.beginTransaction().hide(mSearchingFrag).commit()
 
+                mRecentSearchFrag.updateWordList(searchList)
+
             }
         }
     }
+
+    override fun onSearchWordClicked(title: String) {
+        if(title.isNotEmpty()){
+            supportFragmentManager.beginTransaction().show(mSearchingFrag).commit()
+            supportFragmentManager.beginTransaction().hide(mRecentSearchFrag).commit()
+            mSearchingFrag.searchWordSelected(title)
+        }
+
+
+    }
+
+    override fun onStop() {
+        super.onStop()
+        val wordsFromSearchFrag = mSearchingFrag.getSearchWordList()
+        var recentWords = mRecentSearchFrag.getSearchWordList()
+
+        if(wordsFromSearchFrag.isNotEmpty()){
+            for(word:String in wordsFromSearchFrag){
+                recentWords.add(0, word)
+            }
+            if(recentWords.size > 10){
+                recentWords = recentWords.slice(0..9) as ArrayList<String>
+            }
+        }
+
+        mWordsFromRoom = SearchWordsEntity(Gson().toJson(recentWords))
+        CoroutineScope(Dispatchers.IO).launch {
+            mSearchWordsDB.searchWordDao().newWords(mWordsFromRoom)
+        }
+    }
+
+    /*
+    override fun onRestart() {
+        super.onRestart()
+        CoroutineScope(Dispatchers.IO).launch {
+            mWordsFromRoom = mSearchWordsDB.searchWordDao().getWords()
+        }
+
+        val type = object : TypeToken<ArrayList<String>>(){}.type
+        mRecentSearchFrag.restoreSearchWordList(Gson().fromJson(mWordsFromRoom.wordList, type))
+    }*/
+
 
 
 }
