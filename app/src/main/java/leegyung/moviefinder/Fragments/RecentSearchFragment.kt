@@ -35,6 +35,7 @@ class RecentSearchFragment(private val mMainActivityContext : MainActivity) : Fr
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         //WordListRecyclerView adapter 설정
+        //adapter 에서 SearchFragment 로 전환 기능 접근을 위해 mMainActivityContext 전달
         mAdapter = WordsRecyclerViewAdapter(context, mMainActivityContext)
         mBinding.WordListRecyclerView.adapter = mAdapter
 
@@ -53,6 +54,8 @@ class RecentSearchFragment(private val mMainActivityContext : MainActivity) : Fr
                 (activity as MainActivity).switchFragment(1, null)
             }
         }
+        //SearchFragment 에서는 뒤로가기 종료 방지를 위해 viewLifecycleOwner 사용
+        //테스트에 편함...
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, mBackPressedCallback)
     }
 

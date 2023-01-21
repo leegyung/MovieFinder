@@ -93,7 +93,6 @@ class SearchFragment : Fragment() {
             if(keyEvent.action == KeyEvent.ACTION_DOWN && keyCode == KEYCODE_ENTER){
                 //키보드의 엔터키 누를시 데이터 요청 실행
                 searchMovie()
-                Log.v("enter", "pressed")
             }
             false
         }
@@ -106,10 +105,13 @@ class SearchFragment : Fragment() {
         val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         //인터넷 연결시 실행
         if(checkInternetConnection()){
-            //같은 검색어가 아닐시 실행
-            if(mBinding.MovieTitleText.text.toString() != mViewModel.mCurrentTitle){
+            //전이랑 같은 검색어가 아니거나 검색어가 비어있을 시 실행
+            if(mBinding.MovieTitleText.text.toString() != mViewModel.mCurrentTitle
+                || mBinding.MovieTitleText.text.toString() == "")
+            {
                 //검색어가 비어있다면 Toast 표시
-                if(mBinding.MovieTitleText.text.toString().isEmpty()){
+                if(mBinding.MovieTitleText.text.toString() == ""){
+                    imm.hideSoftInputFromWindow(view?.windowToken, 0)
                     Toast.makeText(context, "검색어를 입력 하세요.", Toast.LENGTH_SHORT).show()
                 }else{
                     //mViewModel에 현제 검색어 첫 페이지 요청
